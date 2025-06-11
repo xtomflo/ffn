@@ -74,7 +74,13 @@ class ConvStack3DFFNModel(model.FFNModel):
       features: int = 32,
       **kwargs
   ):
-    info = model.ModelInfo(deltas, fov_size, fov_size, fov_size)
+    # For this model, pred_mask_size is the same as fov_size since we don't do any downsampling
+    info = model.ModelInfo(
+        deltas=deltas,
+        pred_mask_size=fov_size,
+        input_seed_size=fov_size,
+        input_image_size=fov_size
+    )
     super().__init__(info, batch_size, **kwargs)
     self.set_input_shapes()
     self.depth = depth
