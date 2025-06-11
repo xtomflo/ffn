@@ -24,7 +24,6 @@ from skimage.transform import AffineTransform
 from skimage.transform import warp
 import tensorflow.compat.v1 as tf
 import tensorflow.experimental.numpy as tnp
-import tensorflow.google.compat.v1 as tf
 from tf import transformations
 
 from multidim_image_augmentation import augmentation_ops
