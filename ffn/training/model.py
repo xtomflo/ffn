@@ -81,7 +81,7 @@ class FFNModel:
           self.shifts.append((dx, dy, dz))
 
     if define_global_step:
-      self.global_step = tf.Variable(0, name='global_step', trainable=False, dtype=tf.int32)
+      self.global_step = tf.compat.v1.train.get_or_create_global_step()
 
     # The seed is always a placeholder which is fed externally from the
     # training/inference drivers.
