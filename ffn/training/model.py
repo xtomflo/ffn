@@ -82,7 +82,8 @@ class FFNModel:
 
     if define_global_step:
       self.global_step = tf.compat.v1.train.get_or_create_global_step()
-
+      #self.global_step = tf.Variable(0, name='global_step', trainable=False, dtype=tf.int32)
+      
     # The seed is always a placeholder which is fed externally from the
     # training/inference drivers.
     self.input_seed = tf.placeholder(tf.float32, name='seed')

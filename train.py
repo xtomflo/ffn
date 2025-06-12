@@ -337,6 +337,9 @@ def train_ffn(model_cls, **model_kwargs):
 
         eval_tracker.sess = sess
         step = int(sess.run(model.global_step))
+        start_time = time.time()
+        last_print_time = start_time
+        print_interval = 60  # Print progress every 60 seconds
 
         if FLAGS.task > 0:
           # To avoid early instabilities when using multiple replicas, we use
@@ -349,6 +352,9 @@ def train_ffn(model_cls, **model_kwargs):
           summary_writer = tf.summary.FileWriterCache.get(FLAGS.train_dir)
           summary_writer.add_session_log(
               tf.summary.SessionLog(status=tf.summary.SessionLog.START), step)
+          print(f"\nStarting training with {FLAGS.max_steps} total steps")
+          print(f"Batch size: {FLAGS.batch_size}")
+          print(f"Training directory: {FLAGS.train_dir}\n")
 
         fov_shifts = list(model.shifts)  # x, y, z
         if FLAGS.shuffle_moves:
@@ -385,6 +391,7 @@ def train_ffn(model_cls, **model_kwargs):
                                              FLAGS.batch_size, model.info)
 
         t_last = time.time()
+        last_loss = None
 
         while not sess.should_stop() and step < FLAGS.max_steps:
           # Run summaries periodically.
@@ -410,6 +417,30 @@ def train_ffn(model_cls, **model_kwargs):
           # Save prediction results in the original seed array so that
           # they can be used in subsequent steps.
           batch_it.update_seeds(updated_seed)
+
+          # Print progress periodically
+          current_time = time.time()
+          if current_time - last_print_time >= print_interval:
+            elapsed_time = current_time - start_time
+            steps_per_sec = step / elapsed_time
+            eta = (FLAGS.max_steps - step) / steps_per_sec if steps_per_sec > 0 else 0
+            
+            # Get current loss if available
+            if summ is not None:
+              summ = tf.Summary.FromString(summ)
+              for value in summ.value:
+                if value.tag == 'loss':
+                  last_loss = value.simple_value
+                  break
+
+            progress = (step / FLAGS.max_steps) * 100
+            print(f"\nStep {step}/{FLAGS.max_steps} ({progress:.1f}%)")
+            if last_loss is not None:
+              print(f"Current loss: {last_loss:.4f}")
+            print(f"Steps/sec: {steps_per_sec:.2f}")
+            print(f"Time elapsed: {elapsed_time/3600:.1f}h")
+            print(f"Estimated time remaining: {eta/3600:.1f}h")
+            last_print_time = current_time
 
           # Record summaries.
           if summ is not None:
