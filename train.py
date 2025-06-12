@@ -445,16 +445,20 @@ def train_ffn(model_cls, **model_kwargs):
           # Record summaries.
           if summ is not None:
             logging.info('Saving summaries.')
-            summ = tf.Summary.FromString(summ)
+            # Check if summ is already a Summary object
+            if isinstance(summ, tf.Summary):
+                summary_obj = summ
+            else:
+                summary_obj = tf.Summary.FromString(summ)
 
             # Compute a loss over the whole training patch (i.e. more than a
             # single-step field of view of the network). This quantifies the
             # quality of the final object mask.
-            summ.value.extend(eval_tracker.get_summaries())
+            summary_obj.value.extend(eval_tracker.get_summaries())
             eval_tracker.reset()
 
             assert summary_writer is not None
-            summary_writer.add_summary(summ, step)
+            summary_writer.add_summary(summary_obj, step)
 
       if summary_writer is not None:
         summary_writer.flush()
